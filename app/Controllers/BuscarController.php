@@ -49,9 +49,7 @@ class BuscarController extends BaseController
         $db3->close();
         $nombredoc="";
         foreach ($data as $key) {
-
           foreach ($data2 as $key2) {
-
             if($key2['alumno_id']==$key['id']){
 
               if($key2['cotejo']=='Validados'){
@@ -72,7 +70,6 @@ class BuscarController extends BaseController
                 $nombredoc="si";
               }
             }
-            
           }
 
           $html.='<tr>';

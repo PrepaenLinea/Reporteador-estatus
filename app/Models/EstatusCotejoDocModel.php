@@ -4,7 +4,7 @@ use CodeIgniter\Model;
 
 class EstatusCotejoDocModel extends Model
 {
-    protected $table      = 'tbl_cat_cotejo_documentos';
+    protected $table = 'tbl_cat_cotejo_documentos';
 
 
     public function getEstatus($id = false){
