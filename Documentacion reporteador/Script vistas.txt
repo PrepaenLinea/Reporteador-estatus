@@ -1,0 +1,97 @@
+---------------------vw_reporteador_estatus-------------------------- 
+
+SELECT 
+	usuarioAlumno.id AS id,
+        usuarioAlumno.usuario AS usuario,
+        tbl_ent_alumno.nombres AS nombres,
+        tbl_ent_alumno.apellidopaterno AS apellidopaterno,
+        tbl_ent_alumno.apellidomaterno AS apellidomaterno,
+        tbl_ent_alumno.matricula AS matricula,
+        tbl_ent_alumno.curp AS curp,
+        tbl_ent_alumno.correoelectronicoprincipal AS correoelectronicoprincipal,
+        tbl_rmm_dictaminacion_alumno.fecharegistro AS fechaDictaminacion,
+        tbl_cat_estatus_dictaminacion.descripcion AS perfil,
+        tbl_cat_cotejo_informacion.descripcion AS descripcion,
+        tbl_rmm_cotejo_informacion_alumno.usuario_id as modificacionInfoId,
+        usuarioCotejoInfo.usuario as modificacionInfoNombre
+    FROM tbl_ent_alumno
+        inner join tbl_rmm_dictaminacion_alumno 
+              ON tbl_rmm_dictaminacion_alumno.alumno_id = tbl_ent_alumno.id
+        inner join tbl_cat_estatus_dictaminacion 
+              ON tbl_rmm_dictaminacion_alumno.estatusdictaminacion_id = tbl_cat_estatus_dictaminacion.id
+        inner join tbl_ent_usuario usuarioAlumno 
+              ON usuarioAlumno.id = tbl_ent_alumno.usuario_id
+        inner join tbl_rmm_cotejo_informacion_alumno 
+              ON tbl_rmm_cotejo_informacion_alumno.alumno_id = tbl_ent_alumno.id
+        inner join tbl_cat_cotejo_informacion 
+              ON tbl_cat_cotejo_informacion.id = tbl_rmm_cotejo_informacion_alumno.cotejoinformacion_id
+        inner join tbl_ent_usuario usuarioCotejoInfo 
+              ON usuarioCotejoInfo.id = sigaprep.tbl_rmm_cotejo_informacion_alumno.usuario_id
+    WHERE tbl_rmm_cotejo_informacion_alumno.id IN (SELECT 
+            MAX(tbl_rmm_cotejo_informacion_alumno.id)
+            FROM tbl_rmm_cotejo_informacion_alumno
+            GROUP BY tbl_rmm_cotejo_informacion_alumno.alumno_id
+            ORDER BY tbl_rmm_cotejo_informacion_alumno.id DESC)
+            AND tbl_rmm_dictaminacion_alumno.id IN (SELECT 
+                MAX(tbl_rmm_dictaminacion_alumno.id)
+            FROM
+                tbl_rmm_dictaminacion_alumno
+            GROUP BY tbl_rmm_dictaminacion_alumno.alumno_id
+            ORDER BY tbl_rmm_dictaminacion_alumno.id DESC)
+            AND tbl_ent_alumno.id > 0
+            AND tbl_ent_alumno.id < 10000
+
+------------------------------vw_estatus_documentos-----------------------
+
+SELECT 
+       sigaprep.tbl_rmm_cotejo_documentos_alumno.alumno_id,
+       sigaprep.tbl_cat_cotejo_documentos.descripcion as cotejo, 
+       count(sigaprep.tbl_rmm_cotejo_documentos_alumno.alumno_id) as contar,
+       vw_reporteador_estatus.perfil,
+       vw_reporteador_estatus.fechaDictaminacion,
+       vw_reporteador_estatus.descripcion,
+       vw_reporteador_estatus.modificacionInfoId as modificacionInfoId,
+       vw_reporteador_estatus.modificacionInfoNombre as modificacionInfoNombre
+    FROM sigaprep.tbl_rmm_cotejo_documentos_alumno 
+       inner join sigaprep.tbl_cat_cotejo_documentos 
+          ON sigaprep.tbl_cat_cotejo_documentos.id=sigaprep.tbl_rmm_cotejo_documentos_alumno.cotejodocumentos_id
+       inner join vw_reporteador_estatus
+          ON sigaprep.vw_reporteador_estatus.id=sigaprep.tbl_rmm_cotejo_documentos_alumno.alumno_id
+    WHERE sigaprep.tbl_rmm_cotejo_documentos_alumno.id 
+    IN (select max(sigaprep.tbl_rmm_cotejo_documentos_alumno.id) 
+    FROM sigaprep.tbl_rmm_cotejo_documentos_alumno 
+    group by sigaprep.tbl_rmm_cotejo_documentos_alumno.alumno_id,sigaprep.tbl_rmm_cotejo_documentos_alumno.tipodocumentos_id) 
+    group by sigaprep.tbl_rmm_cotejo_documentos_alumno.alumno_id, sigaprep.tbl_rmm_cotejo_documentos_alumno.cotejodocumentos_id
+
+
+------------------vw_estatus_documentos_usuarios--------------------
+
+SELECT
+       sigaprep.tbl_rmm_cotejo_documentos_alumno.alumno_id AS id,
+       vw_reporteador_estatus.usuario AS usuario,
+       vw_reporteador_estatus.nombres AS nombres,
+       vw_reporteador_estatus.apellidopaterno AS apellidopaterno,
+       vw_reporteador_estatus.apellidomaterno AS apellidomaterno,
+       vw_reporteador_estatus.matricula AS matricula,
+       vw_reporteador_estatus.curp AS curp,
+       vw_reporteador_estatus.correoelectronicoprincipal AS correoelectronicoprincipal,
+       vw_reporteador_estatus.fechaDictaminacion AS fechaDictaminacion,
+       vw_reporteador_estatus.perfil AS perfil,
+       vw_reporteador_estatus.descripcion AS descripcion,
+       vw_reporteador_estatus.modificacionInfoId as modificacionInfoId,
+       vw_reporteador_estatus.modificacionInfoNombre as modificacionInfoNombre,
+       tbl_rmm_cotejo_documentos_alumno.usuariomodifico_id as usuariomodificodoc, 
+       tbl_ent_usuario.usuario as usuarionombremodificodoc, 
+       count(sigaprep.tbl_rmm_cotejo_documentos_alumno.usuariomodifico_id) as contar
+    FROM sigaprep.tbl_rmm_cotejo_documentos_alumno 
+       inner join sigaprep.tbl_cat_cotejo_documentos 
+           ON sigaprep.tbl_cat_cotejo_documentos.id=sigaprep.tbl_rmm_cotejo_documentos_alumno.cotejodocumentos_id
+       inner join vw_reporteador_estatus
+           ON sigaprep.vw_reporteador_estatus.id=sigaprep.tbl_rmm_cotejo_documentos_alumno.alumno_id
+       inner join tbl_ent_usuario
+           ON sigaprep.tbl_ent_usuario.id=sigaprep.tbl_rmm_cotejo_documentos_alumno.usuariomodifico_id
+    WHERE sigaprep.tbl_rmm_cotejo_documentos_alumno.id 
+    IN (select max(sigaprep.tbl_rmm_cotejo_documentos_alumno.id) 
+    FROM sigaprep.tbl_rmm_cotejo_documentos_alumno 
+    group by sigaprep.tbl_rmm_cotejo_documentos_alumno.alumno_id,sigaprep.tbl_rmm_cotejo_documentos_alumno.tipodocumentos_id) 
+    group by sigaprep.tbl_rmm_cotejo_documentos_alumno.alumno_id, sigaprep.tbl_rmm_cotejo_documentos_alumno.usuariomodifico_id
